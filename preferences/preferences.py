@@ -20,60 +20,77 @@ from collections.abc import Callable
 Check = Callable[[ast.AST], "str | None"]
 
 IDENTIFIER_VOWELS = frozenset("aeiouy")
-IDENTIFIER_INITIALISMS = frozenset(
-    {
-        "api",
-        "ast",
-        "cd",
-        "ci",
-        "cli",
-        "cpu",
-        "css",
-        "csv",
-        "db",
-        "dns",
-        "gpu",
-        "grpc",
-        "hsl",
-        "hsv",
-        "html",
-        "http",
-        "https",
-        "id",
-        "io",
-        "ip",
-        "json",
-        "jwt",
-        "llm",
-        "mcp",
-        "md",
-        "ml",
-        "npm",
-        "os",
-        "pr",
-        "rgb",
-        "rng",
-        "sdk",
-        "sha",
-        "sql",
-        "ssh",
-        "ssl",
-        "svn",
-        "tcp",
-        "tls",
-        "toml",
-        "tsv",
-        "ttl",
-        "udp",
-        "ui",
-        "uri",
-        "url",
-        "utc",
-        "uuid",
-        "xml",
-        "yaml",
-    }
-)
+IDENTIFIER_INITIALISMS = frozenset({
+    "api",
+    "ast",
+    "cd",
+    "ci",
+    "cli",
+    "cpu",
+    "css",
+    "csv",
+    "db",
+    "dns",
+    "gpu",
+    "grpc",
+    "hsl",
+    "hsv",
+    "html",
+    "http",
+    "https",
+    "id",
+    "io",
+    "ip",
+    "json",
+    "jwt",
+    "llm",
+    "mcp",
+    "md",
+    "ml",
+    "npm",
+    "os",
+    "pr",
+    "rgb",
+    "rng",
+    "sdk",
+    "sha",
+    "sql",
+    "ssh",
+    "ssl",
+    "svn",
+    "tcp",
+    "tls",
+    "toml",
+    "tsv",
+    "ttl",
+    "udp",
+    "ui",
+    "uri",
+    "url",
+    "utc",
+    "uuid",
+    "xml",
+    "yaml",
+})
+
+
+def identifier_boundary(part: str, index: int) -> bool:
+    """Return whether an identifier chunk starts a new word at ``index``.
+
+    Args:
+        part: One underscore-delimited identifier chunk.
+        index: Character position to inspect; must be greater than zero.
+
+    Returns:
+        True when the position starts a digit run, word, or acronym boundary.
+    """
+    character = part[index]
+    previous = part[index - 1]
+    following = part[index + 1] if index + 1 < len(part) else ""
+    changes_digit_kind = character.isdigit() != previous.isdigit()
+    starts_camel_word = character.isupper() and previous.islower()
+    ends_acronym = character.isupper() and previous.isupper() and following.islower()
+    return changes_digit_kind or starts_camel_word or ends_acronym
 
 
 def identifier_words(name: str) -> list[tuple[str, bool]]:
@@ -86,19 +103,11 @@ def identifier_words(name: str) -> list[tuple[str, bool]]:
         Lowercase words paired with whether the original chunk was an all-uppercase acronym.
     """
     words: list[tuple[str, bool]] = []
-    for part in name.strip("_").split("_"):
-        if not part:
-            continue
+    parts = (part for part in name.strip("_").split("_") if part)
+    for part in parts:
         start = 0
         for index in range(1, len(part)):
-            character = part[index]
-            previous = part[index - 1]
-            following = part[index + 1] if index + 1 < len(part) else ""
-            starts_digit = character.isdigit() and not previous.isdigit()
-            ends_digit = previous.isdigit() and not character.isdigit()
-            starts_camel_word = character.isupper() and previous.islower()
-            ends_acronym = character.isupper() and previous.isupper() and following.islower()
-            if not (starts_digit or ends_digit or starts_camel_word or ends_acronym):
+            if not identifier_boundary(part, index):
                 continue
             raw_word = part[start:index]
             words.append((raw_word.lower(), raw_word.isupper() and len(raw_word) > 1))
