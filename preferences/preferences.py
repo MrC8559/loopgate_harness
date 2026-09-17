@@ -13,11 +13,65 @@ Use this file ONLY for rules that ruff, pylint, and pyright cannot express but y
 from __future__ import annotations
 
 import ast
+import re
 from collections.abc import Callable
 
 # A check looks at ONE AST node and returns a complaint or None if the node is fine.
 # It never walks the tree. root preferences_violations does the walk and feeds nodes to functions.
 Check = Callable[[ast.AST], "str | None"]
+
+IDENTIFIER_TOKEN_PATTERN = re.compile(r"[A-Z]+(?=[A-Z][a-z]|\d|$)|[A-Z]?[a-z]+|[A-Z]+|\d+")
+IDENTIFIER_VOWELS = frozenset("aeiouy")
+IDENTIFIER_INITIALISMS = frozenset(
+    (
+        "api ast cd ci cli cpu css csv db dns gpu grpc hsl hsv html http https id io ip json jwt llm mcp md ml "
+        "npm os pr rgb rng sdk sha sql ssh ssl svn tcp tls toml tsv ttl udp ui uri url utc uuid xml yaml"
+    ).split()
+)
+
+
+def identifier_words(name: str) -> list[tuple[str, bool]]:
+    """Split snake_case and CamelCase identifiers into lowercase words plus acronym metadata."""
+    words: list[tuple[str, bool]] = []
+    for part in name.strip("_").split("_"):
+        for match in IDENTIFIER_TOKEN_PATTERN.finditer(part):
+            raw_word = match.group(0)
+            words.append((raw_word.lower(), raw_word.isupper() and len(raw_word) > 1))
+    return words
+
+
+def compressed_identifier_words(name: str) -> list[str]:
+    """Return only clearly compressed identifier words while preferring false negatives to false positives."""
+    long_words: list[str] = []
+    short_words: list[str] = []
+    for word, uppercase_chunk in identifier_words(name):
+        if not word.isalpha() or word in IDENTIFIER_INITIALISMS or uppercase_chunk:
+            continue
+        if any(character in IDENTIFIER_VOWELS for character in word):
+            continue
+        if len(word) >= 3:
+            long_words.append(word)
+        elif len(word) == 2:
+            short_words.append(word)
+    if long_words:
+        return long_words
+    if len(short_words) >= 2:
+        return short_words
+    return []
+
+
+def abbreviated_name(node: ast.AST) -> str | None:
+    """Flag clearly compressed function and class names without claiming general English correctness.
+
+    The heuristic checks function, async-function, and class identifiers only. It treats ``y`` as a vowel,
+    preserves common technical initialisms, and leaves unknown all-uppercase acronym chunks alone.
+    """
+    if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+        return None
+    compressed_words = compressed_identifier_words(node.name)
+    if not compressed_words:
+        return None
+    return f"'{node.name}': spell out compressed identifier token(s): {', '.join(compressed_words)}"
 
 
 def is_in_class(node: ast.AST) -> bool:
@@ -268,6 +322,7 @@ def complex_comprehension(node: ast.AST) -> str | None:
 
 # To add a style rule: write a dumb one-node function above and register it here under its kind.
 CHECKS: dict[str, Check] = {
+    "abbreviated_name": abbreviated_name,
     "named_with_underscore_and_not_in_class_or_dunder": named_with_underscore_and_not_in_class_or_dunder,
     "hidden_signature_star_args": hidden_signature_star_args,
     "dynamic_star_call": dynamic_star_call,
