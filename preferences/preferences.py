@@ -13,35 +13,110 @@ Use this file ONLY for rules that ruff, pylint, and pyright cannot express but y
 from __future__ import annotations
 
 import ast
-import re
 from collections.abc import Callable
 
 # A check looks at ONE AST node and returns a complaint or None if the node is fine.
 # It never walks the tree. root preferences_violations does the walk and feeds nodes to functions.
 Check = Callable[[ast.AST], "str | None"]
 
-IDENTIFIER_TOKEN_PATTERN = re.compile(r"[A-Z]+(?=[A-Z][a-z]|\d|$)|[A-Z]?[a-z]+|[A-Z]+|\d+")
 IDENTIFIER_VOWELS = frozenset("aeiouy")
 IDENTIFIER_INITIALISMS = frozenset(
-    (
-        "api ast cd ci cli cpu css csv db dns gpu grpc hsl hsv html http https id io ip json jwt llm mcp md ml "
-        "npm os pr rgb rng sdk sha sql ssh ssl svn tcp tls toml tsv ttl udp ui uri url utc uuid xml yaml"
-    ).split()
+    {
+        "api",
+        "ast",
+        "cd",
+        "ci",
+        "cli",
+        "cpu",
+        "css",
+        "csv",
+        "db",
+        "dns",
+        "gpu",
+        "grpc",
+        "hsl",
+        "hsv",
+        "html",
+        "http",
+        "https",
+        "id",
+        "io",
+        "ip",
+        "json",
+        "jwt",
+        "llm",
+        "mcp",
+        "md",
+        "ml",
+        "npm",
+        "os",
+        "pr",
+        "rgb",
+        "rng",
+        "sdk",
+        "sha",
+        "sql",
+        "ssh",
+        "ssl",
+        "svn",
+        "tcp",
+        "tls",
+        "toml",
+        "tsv",
+        "ttl",
+        "udp",
+        "ui",
+        "uri",
+        "url",
+        "utc",
+        "uuid",
+        "xml",
+        "yaml",
+    }
 )
 
 
 def identifier_words(name: str) -> list[tuple[str, bool]]:
-    """Split snake_case and CamelCase identifiers into lowercase words plus acronym metadata."""
+    """Split snake_case and CamelCase identifiers into words.
+
+    Args:
+        name: Identifier text to split.
+
+    Returns:
+        Lowercase words paired with whether the original chunk was an all-uppercase acronym.
+    """
     words: list[tuple[str, bool]] = []
     for part in name.strip("_").split("_"):
-        for match in IDENTIFIER_TOKEN_PATTERN.finditer(part):
-            raw_word = match.group(0)
+        if not part:
+            continue
+        start = 0
+        for index in range(1, len(part)):
+            character = part[index]
+            previous = part[index - 1]
+            following = part[index + 1] if index + 1 < len(part) else ""
+            starts_digit = character.isdigit() and not previous.isdigit()
+            ends_digit = previous.isdigit() and not character.isdigit()
+            starts_camel_word = character.isupper() and previous.islower()
+            ends_acronym = character.isupper() and previous.isupper() and following.islower()
+            if not (starts_digit or ends_digit or starts_camel_word or ends_acronym):
+                continue
+            raw_word = part[start:index]
             words.append((raw_word.lower(), raw_word.isupper() and len(raw_word) > 1))
+            start = index
+        raw_word = part[start:]
+        words.append((raw_word.lower(), raw_word.isupper() and len(raw_word) > 1))
     return words
 
 
 def compressed_identifier_words(name: str) -> list[str]:
-    """Return only clearly compressed identifier words while preferring false negatives to false positives."""
+    """Return only clearly compressed identifier words.
+
+    Args:
+        name: Function or class identifier to inspect.
+
+    Returns:
+        Compressed tokens, preferring false negatives to false positives.
+    """
     long_words: list[str] = []
     short_words: list[str] = []
     for word, uppercase_chunk in identifier_words(name):
@@ -61,10 +136,16 @@ def compressed_identifier_words(name: str) -> list[str]:
 
 
 def abbreviated_name(node: ast.AST) -> str | None:
-    """Flag clearly compressed function and class names without claiming general English correctness.
+    """Flag clearly compressed function and class names.
 
     The heuristic checks function, async-function, and class identifiers only. It treats ``y`` as a vowel,
     preserves common technical initialisms, and leaves unknown all-uppercase acronym chunks alone.
+
+    Args:
+        node: AST node to inspect.
+
+    Returns:
+        A readable complaint for compressed identifiers, otherwise None.
     """
     if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
         return None
