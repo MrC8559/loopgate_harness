@@ -60,4 +60,5 @@ def test_vale_flags_overlong_docstring_sentence(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     assert result.stdout.count("LoopGate.SentenceLength") == 1
-    assert "31 words" in result.stdout
+    assert "Sentence has" in result.stdout
+    assert "split it into shorter statements" in result.stdout
