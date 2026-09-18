@@ -954,6 +954,10 @@ def test_init_hoists_and_records_the_installed_harness(git_repo: Path) -> None:
         "scratchpad/runs/.gitkeep",
         "tests/preferences/test_preferences.py",
         "tests/mutation/test_check_mutmut.py",
+        ".vale.ini",
+        "styles/config/views/Python.yml",
+        "styles/LoopGate/PlainWords.yml",
+        "styles/LoopGate/SentenceLength.yml",
     )
     for path in required_assets:
         assert (git_repo / path).is_file()
