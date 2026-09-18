@@ -728,7 +728,7 @@ def test_write_harness_config_selects_installed_user_tools(monkeypatch: pytest.M
             "vale": {
                 "category": "prose",
                 "filenames": [".vale.ini", "vale.ini"],
-                "args": ["vale", "."],
+                "args": ["vale", "--no-global", "--glob=!{.venv/**,**/.venv/**,.git/**,**/.git/**,.tox/**,**/.tox/**,build/**,**/build/**,dist/**,**/dist/**,node_modules/**,**/node_modules/**,mutants/**,**/mutants/**,scratchpad/**,**/scratchpad/**,.worktrees/**,**/.worktrees/**,worktrees/**,**/worktrees/**}", "."],
             },
             "xenon": {
                 "category": "complexity",
