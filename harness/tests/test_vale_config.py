@@ -43,7 +43,11 @@ def test_vale_checks_comments_and_docstrings_but_not_string_literals(tmp_path: P
 def test_vale_flags_overlong_docstring_sentence(tmp_path: Path) -> None:
     """The local sentence-length rule should report long Python docstring prose."""
     sample = tmp_path / "long_sentence.py"
-    sentence = " ".join(f"word{index}" for index in range(31))
+    sentence = (
+        "This deliberately long technical sentence keeps adding ordinary readable words so the local prose rule "
+        "has enough real language to exceed its configured limit and report a clear warning to the contributor "
+        "who wrote it today"
+    )
     sample.write_text(f'"""{sentence}."""\n', encoding="utf-8")
 
     result = subprocess.run(
