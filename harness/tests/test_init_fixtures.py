@@ -310,7 +310,7 @@ def test_init_writes_detected_configuration(tmp_path: Path, monkeypatch: pytest.
             "letta_evals",
         ],
         "types": ["mypy", "letta_evals"],
-        "vale": ["vale", "letta_evals"],
+        "vale": ["vale", "--no-global", "--glob=!{.venv/**,**/.venv/**,.git/**,**/.git/**,.tox/**,**/.tox/**,build/**,**/build/**,dist/**,**/dist/**,node_modules/**,**/node_modules/**,mutants/**,**/mutants/**,scratchpad/**,**/scratchpad/**,.worktrees/**,**/.worktrees/**,worktrees/**,**/worktrees/**}", "letta_evals"],
         "test": [
             "pytest",
             "-p",
