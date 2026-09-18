@@ -562,7 +562,7 @@ def test_write_harness_config_is_idempotent_with_existing_wiring(
     configured = tomllib.loads(first_config)
 
     assert first_checks == second_checks
-    assert first_checks == {"ruff_lint", "ruff_format", "complexity", "audit", "security", "types", "test"}, (
+    assert first_checks == {"ruff_lint", "ruff_format", "complexity", "audit", "security", "types", "test", "vale"}, (
         "the reported checks must name every wired preflight and gate command"
     )
     assert INIT_PROJECT_COMMENT in first_config
@@ -580,6 +580,7 @@ def test_write_harness_config_is_idempotent_with_existing_wiring(
         "security": selected_tools["semgrep"]["args"],
         "types": selected_tools["pyright"]["args"],
         "test": selected_tools["pytest"]["args"],
+        "vale": selected_tools["vale"]["args"],
     }
     assert tomllib.loads(second_config) == configured
 
@@ -723,6 +724,11 @@ def test_write_harness_config_selects_installed_user_tools(monkeypatch: pytest.M
                 "filenames": ["pyrefly.toml", ".pyrefly.toml"],
                 "pyproject": ["pyrefly"],
                 "args": ["pyrefly", "check", "."],
+            },
+            "vale": {
+                "category": "prose",
+                "filenames": [".vale.ini", "vale.ini"],
+                "args": ["vale", "."],
             },
             "xenon": {
                 "category": "complexity",
