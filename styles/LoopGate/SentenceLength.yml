@@ -1,6 +1,0 @@
-extends: occurrence
-message: "Sentence has %d words; split it into shorter statements."
-level: warning
-scope: sentence
-max: 30
-token: '\b(\w+)\b'
