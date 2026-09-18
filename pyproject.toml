@@ -68,7 +68,7 @@ exclude = ["harness/tests/**"]
 ".githooks" = "harness/.githooks"
 "scratchpad/runs/.gitkeep" = "harness/scratchpad/runs/.gitkeep"
 ".vale.ini" = "harness/vale/.vale.ini"
-"styles" = "harness/vale/styles"
+".vale/styles" = "harness/vale/styles"
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -81,7 +81,7 @@ include = [
     ".githooks/**",
     "scratchpad/runs/.gitkeep",
     ".vale.ini",
-    "styles/**"
+    ".vale/**"
 ]
 
 # ==============================================================================
@@ -167,7 +167,7 @@ test = ["pytest", "-p", "no:cacheprovider", "-n", "auto", "--cov", "--cov-report
 types = ["pyright", "--outputjson", "preferences"]
 
 [tool.harness.FORBIDDEN]
-DIRS = ["harness/", ".githooks/", ".github/", ".git/", "preferences/", "tests/preferences/", "mutation", "tests/mutation/", "styles/"]
+DIRS = ["harness/", ".githooks/", ".github/", ".git/", "preferences/", "tests/preferences/", "mutation", "tests/mutation/", ".vale/"]
 FILES = [
     ".vale.ini",
     "agents.md",
