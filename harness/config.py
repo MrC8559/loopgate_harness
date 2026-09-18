@@ -168,7 +168,7 @@ def get_tools(paths: set[str]) -> dict[str, dict[str, Any]]:
         "vale": {
             "category": "prose",
             "filenames": [".vale.ini", "vale.ini"],
-            "args": ["vale", *source],
+            "args": ["vale", "--no-global", "--glob=!{.venv/**,**/.venv/**,.git/**,**/.git/**,.tox/**,**/.tox/**,build/**,**/build/**,dist/**,**/dist/**,node_modules/**,**/node_modules/**,mutants/**,**/mutants/**,scratchpad/**,**/scratchpad/**,.worktrees/**,**/.worktrees/**,worktrees/**,**/worktrees/**}", *source],
         },
         "xenon": {
             "category": "complexity",
