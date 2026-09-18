@@ -112,7 +112,7 @@ vale = ["vale", "--no-global", "--glob=!{.venv/**,**/.venv/**,.git/**,**/.git/**
 test = ["pytest", "-p", "no:cacheprovider", "-n", "auto", "--cov", "--cov-report=term-missing", "--cov-fail-under=25", "--durations=5"]
 
 [tool.harness.FORBIDDEN]
-DIRS = ["harness/", ".githooks/", ".github/", ".git/", "preferences/", "tests/preferences/", "mutation", "tests/mutation/", "styles/"]
+DIRS = ["harness/", ".githooks/", ".github/", ".git/", "preferences/", "tests/preferences/", "mutation", "tests/mutation/", ".vale/"]
 FILES = [
     ".vale.ini",
     "agents.md",
