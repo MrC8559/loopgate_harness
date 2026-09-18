@@ -12,8 +12,15 @@ def test_vale_checks_comments_and_docstrings_but_not_string_literals(tmp_path: P
     """The Python View should lint prose nodes without treating normal strings as prose."""
     sample = tmp_path / "sample.py"
     sample.write_text(
-        '"""We utilize a deliberately wordy verb here."""\n'
-        'value = "utilize should stay ordinary code data"\n'
+        '"""We utilize a deliberately wordy verb in the module docstring."""\n'
+        '\n'
+        'class Example:\n'
+        '    """We utilize another wordy verb in the class docstring."""\n'
+        '\n'
+        '    def method(self) -> str:\n'
+        '        """We utilize the word again in the function docstring."""\n'
+        '        return "utilize should stay ordinary code data"\n'
+        '\n'
         '# In order to keep this comment clear, use the shorter phrase.\n',
         encoding="utf-8",
     )
@@ -28,6 +35,6 @@ def test_vale_checks_comments_and_docstrings_but_not_string_literals(tmp_path: P
 
     assert result.returncode == 0, result.stderr
     output = result.stdout
-    assert output.count("LoopGate.PlainWords") == 2
-    assert "docstring" not in result.stderr.casefold()
+    assert output.count("LoopGate.PlainWords") == 4
+    assert "ordinary code data" not in output
     assert "sample.py:" in output
