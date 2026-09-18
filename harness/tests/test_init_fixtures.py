@@ -245,7 +245,7 @@ def test_untouched_checks_keep_exact_argv(tmp_path: Path, monkeypatch: pytest.Mo
     written = configure_repo(tmp_path, monkeypatch, root_files=("mypy.ini",))
     for stage in ("preflight", "gate"):
         if stage == "gate":
-            assert len(written["harness"][stage].items()) == 4
+            assert len(written["harness"][stage].items()) == 5
             for name, argv in written["harness"][stage].items():
                 if name != "types":
                     expected = TOOLS["pytest"]["args"] if name == "test" else TEMPLATE["harness"][stage][name]
@@ -310,6 +310,7 @@ def test_init_writes_detected_configuration(tmp_path: Path, monkeypatch: pytest.
             "letta_evals",
         ],
         "types": ["mypy", "letta_evals"],
+        "vale": ["vale", "letta_evals"],
         "test": [
             "pytest",
             "-p",
