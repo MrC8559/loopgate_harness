@@ -26,7 +26,7 @@ def test_vale_checks_comments_and_docstrings_but_not_string_literals(tmp_path: P
     )
 
     result = subprocess.run(
-        ["vale", "--config", str(REPO_ROOT / ".vale.ini"), "--output=line", str(sample)],
+        ["vale", "--no-global", "--config", str(REPO_ROOT / ".vale.ini"), "--output=line", str(sample)],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -38,3 +38,22 @@ def test_vale_checks_comments_and_docstrings_but_not_string_literals(tmp_path: P
     assert output.count("LoopGate.PlainWords") == 4
     assert "ordinary code data" not in output
     assert "sample.py:" in output
+
+
+def test_vale_flags_overlong_docstring_sentence(tmp_path: Path) -> None:
+    """The local sentence-length rule should report long Python docstring prose."""
+    sample = tmp_path / "long_sentence.py"
+    sentence = " ".join(f"word{index}" for index in range(31))
+    sample.write_text(f'"""{sentence}."""\n', encoding="utf-8")
+
+    result = subprocess.run(
+        ["vale", "--no-global", "--config", str(REPO_ROOT / ".vale.ini"), "--output=line", str(sample)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.count("LoopGate.SentenceLength") == 1
+    assert "31 words" in result.stdout
