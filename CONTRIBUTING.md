@@ -24,7 +24,7 @@ source .venv/bin/activate
 # Vale >= 3.17 is required for the Python comment/docstring View.
 # macOS: brew install vale
 # Windows: choco install vale
-# Linux: sudo apt install vale
+# Linux: install Vale from GitHub Releases or a supported distro package
 git config core.hooksPath .githooks  # enable the repo's git hooks
 ```
 
