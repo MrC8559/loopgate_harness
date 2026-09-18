@@ -728,7 +728,7 @@ def test_write_harness_config_selects_installed_user_tools(monkeypatch: pytest.M
             "vale": {
                 "category": "prose",
                 "filenames": [".vale.ini", "vale.ini"],
-                "args": ["vale", "--no-global", "--glob=!{.venv/**,**/.venv/**,.git/**,**/.git/**,.tox/**,**/.tox/**,build/**,**/build/**,dist/**,**/dist/**,node_modules/**,**/node_modules/**,mutants/**,**/mutants/**,scratchpad/**,**/scratchpad/**,.worktrees/**,**/.worktrees/**,worktrees/**,**/worktrees/**}", "."],
+                "args": ["vale", "--no-global", f"--glob={config.VALE_GLOB}", "."],
             },
             "xenon": {
                 "category": "complexity",
@@ -955,9 +955,9 @@ def test_init_hoists_and_records_the_installed_harness(git_repo: Path) -> None:
         "tests/preferences/test_preferences.py",
         "tests/mutation/test_check_mutmut.py",
         ".vale.ini",
-        "styles/config/views/Python.yml",
-        "styles/LoopGate/PlainWords.yml",
-        "styles/LoopGate/SentenceLength.yml",
+        ".vale/styles/config/views/Python.yml",
+        ".vale/styles/LoopGate/PlainWords.yml",
+        ".vale/styles/LoopGate/SentenceLength.yml",
     )
     for path in required_assets:
         assert (git_repo / path).is_file()
