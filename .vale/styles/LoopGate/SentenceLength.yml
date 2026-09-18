@@ -1,6 +1,7 @@
-extends: occurrence
-message: "Sentence has %d words; split it into shorter statements."
+extends: existence
+message: "Sentence exceeds 30 words; split it into shorter statements."
 level: warning
-scope: sentence
-max: 30
-token: '\b(\w+)\b'
+scope: text
+nonword: true
+tokens:
+  - '(?:\b\w+\b[^\w.!?]*){31,}'
