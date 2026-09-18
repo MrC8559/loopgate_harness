@@ -158,12 +158,14 @@ security = [
     "--exclude-rule", "yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag",
     ".",
 ]
+vale = ["vale", "."]
 test = ["pytest", "-p", "no:cacheprovider", "-n", "auto", "--cov", "--cov-report=term-missing", "--cov-fail-under=100", "--durations=5"]
 types = ["pyright", "--outputjson", "preferences"]
 
 [tool.harness.FORBIDDEN]
-DIRS = ["harness/", ".githooks/", ".github/", ".git/", "preferences/", "tests/preferences/", "mutation", "tests/mutation/"]
+DIRS = ["harness/", ".githooks/", ".github/", ".git/", "preferences/", "tests/preferences/", "mutation", "tests/mutation/", "styles/"]
 FILES = [
+    ".vale.ini",
     "agents.md",
     "docs/prompt.md",
     "docs/plan.md",  # delete/comment line if you want agents to manage the core plan
