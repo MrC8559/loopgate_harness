@@ -60,5 +60,31 @@ def test_vale_flags_overlong_docstring_sentence(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     assert result.stdout.count("LoopGate.SentenceLength") == 1
-    assert "Sentence has" in result.stdout
+    assert "Sentence exceeds 30 words" in result.stdout
     assert "split it into shorter statements" in result.stdout
+
+    short_sentences = tmp_path / "short_sentences.py"
+    short_sentences.write_text(
+        '"""This first sentence stays comfortably below the configured limit while still giving the docstring '
+        'enough detail for a useful example. This second sentence also stays below the limit even though the '
+        'whole paragraph contains more than thirty words in total."""\n',
+        encoding="utf-8",
+    )
+
+    short_result = subprocess.run(
+        [
+            "vale",
+            "--no-global",
+            "--config",
+            str(REPO_ROOT / ".vale.ini"),
+            "--output=line",
+            str(short_sentences),
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert short_result.returncode == 0, short_result.stderr
+    assert "LoopGate.SentenceLength" not in short_result.stdout
