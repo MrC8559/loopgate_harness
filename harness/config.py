@@ -11,6 +11,8 @@ from harness.gate import gates
 site_packages = Path(str(distribution("loopgate").locate_file("")))
 package_root = site_packages / "harness"
 repo_root = gates().repo_root
+packaged_vale_root = package_root / "vale"
+vale_root = packaged_vale_root if packaged_vale_root.is_dir() else repo_root
 
 
 def get_tools(paths: set[str]) -> dict[str, dict[str, Any]]:
@@ -259,6 +261,8 @@ ASSETS: dict[str, tuple[Path, Path]] = {
     "scratchpad": (package_root / "scratchpad/runs/.gitkeep", repo_root / "scratchpad/runs/.gitkeep"),
     "preferences": (site_packages / "preferences/preferences.py", repo_root / "preferences/preferences.py"),
     "mutation": (site_packages / "mutation/check_mutmut.py", repo_root / "mutation/check_mutmut.py"),
+    "vale_config": (vale_root / ".vale.ini", repo_root / ".vale.ini"),
+    "vale_styles": (vale_root / "styles", repo_root / "styles"),
     "tests/preferences": (
         package_root / "tests/preferences/test_preferences.py",
         repo_root / "tests/preferences/test_preferences.py",
