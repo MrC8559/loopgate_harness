@@ -163,6 +163,11 @@ def get_tools(paths: set[str]) -> dict[str, dict[str, Any]]:
             "pyproject": ["pyrefly"],
             "args": ["pyrefly", "check", *source],
         },
+        "vale": {
+            "category": "prose",
+            "filenames": [".vale.ini", "vale.ini"],
+            "args": ["vale", *source],
+        },
         "xenon": {
             "category": "complexity",
             "filenames": [".xenon.yml"],
@@ -182,6 +187,7 @@ CATEGORIES: dict[str, str] = {
     "complexity": "complexity",
     "format": "ruff_format",
     "lint": "ruff_lint",
+    "prose": "vale",
     "security": "security",
     "test": "test",
     "types": "types",
