@@ -162,7 +162,7 @@ security = [
     "--exclude-rule", "yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag",
     ".",
 ]
-vale = ["vale", "."]
+vale = ["vale", "--no-global", "--glob=!{.venv/**,**/.venv/**,.git/**,**/.git/**,.tox/**,**/.tox/**,build/**,**/build/**,dist/**,**/dist/**,node_modules/**,**/node_modules/**,mutants/**,**/mutants/**,scratchpad/**,**/scratchpad/**,.worktrees/**,**/.worktrees/**,worktrees/**,**/worktrees/**}", "."]
 test = ["pytest", "-p", "no:cacheprovider", "-n", "auto", "--cov", "--cov-report=term-missing", "--cov-fail-under=100", "--durations=5"]
 types = ["pyright", "--outputjson", "preferences"]
 
