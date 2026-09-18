@@ -19,6 +19,150 @@ from collections.abc import Callable
 # It never walks the tree. root preferences_violations does the walk and feeds nodes to functions.
 Check = Callable[[ast.AST], "str | None"]
 
+IDENTIFIER_VOWELS = frozenset("aeiouy")
+IDENTIFIER_INITIALISMS = frozenset({
+    "api",
+    "ast",
+    "cd",
+    "ci",
+    "cli",
+    "cpu",
+    "css",
+    "csv",
+    "db",
+    "dns",
+    "gpu",
+    "grpc",
+    "hsl",
+    "hsv",
+    "html",
+    "http",
+    "https",
+    "id",
+    "io",
+    "ip",
+    "json",
+    "jwt",
+    "llm",
+    "mcp",
+    "md",
+    "ml",
+    "npm",
+    "os",
+    "pr",
+    "rgb",
+    "rng",
+    "sdk",
+    "sha",
+    "sql",
+    "ssh",
+    "ssl",
+    "svn",
+    "tcp",
+    "tls",
+    "toml",
+    "tsv",
+    "ttl",
+    "udp",
+    "ui",
+    "uri",
+    "url",
+    "utc",
+    "uuid",
+    "xml",
+    "yaml",
+})
+
+
+def identifier_boundary(part: str, index: int) -> bool:
+    """Return whether an identifier chunk starts a new word at ``index``.
+
+    Args:
+        part: One underscore-delimited identifier chunk.
+        index: Character position to inspect; must be greater than zero.
+
+    Returns:
+        True when the position starts a digit run, word, or acronym boundary.
+    """
+    character = part[index]
+    previous = part[index - 1]
+    following = part[index + 1] if index + 1 < len(part) else ""
+    changes_digit_kind = character.isdigit() != previous.isdigit()
+    starts_camel_word = character.isupper() and previous.islower()
+    ends_acronym = character.isupper() and previous.isupper() and following.islower()
+    return changes_digit_kind or starts_camel_word or ends_acronym
+
+
+def identifier_words(name: str) -> list[tuple[str, bool]]:
+    """Split snake_case and CamelCase identifiers into words.
+
+    Args:
+        name: Identifier text to split.
+
+    Returns:
+        Lowercase words paired with whether the original chunk was an all-uppercase acronym.
+    """
+    words: list[tuple[str, bool]] = []
+    parts = (part for part in name.strip("_").split("_") if part)
+    for part in parts:
+        start = 0
+        for index in range(1, len(part)):
+            if not identifier_boundary(part, index):
+                continue
+            raw_word = part[start:index]
+            words.append((raw_word.lower(), raw_word.isupper() and len(raw_word) > 1))
+            start = index
+        raw_word = part[start:]
+        words.append((raw_word.lower(), raw_word.isupper() and len(raw_word) > 1))
+    return words
+
+
+def compressed_identifier_words(name: str) -> list[str]:
+    """Return only clearly compressed identifier words.
+
+    Args:
+        name: Function or class identifier to inspect.
+
+    Returns:
+        Compressed tokens, preferring false negatives to false positives.
+    """
+    long_words: list[str] = []
+    short_words: list[str] = []
+    for word, uppercase_chunk in identifier_words(name):
+        if not word.isalpha() or word in IDENTIFIER_INITIALISMS or uppercase_chunk:
+            continue
+        if any(character in IDENTIFIER_VOWELS for character in word):
+            continue
+        if len(word) >= 3:
+            long_words.append(word)
+        elif len(word) == 2:
+            short_words.append(word)
+    if long_words:
+        return long_words
+    if len(short_words) >= 2:
+        return short_words
+    return []
+
+
+def abbreviated_name(node: ast.AST) -> str | None:
+    """Flag clearly compressed function and class names.
+
+    The heuristic checks function, async-function, and class identifiers only. It treats ``y`` as a vowel,
+    preserves common technical initialisms, and leaves unknown all-uppercase acronym chunks alone.
+
+    Args:
+        node: AST node to inspect.
+
+    Returns:
+        A readable complaint for compressed identifiers, otherwise None.
+    """
+    if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+        return None
+    compressed_words = compressed_identifier_words(node.name)
+    if not compressed_words:
+        return None
+    return f"'{node.name}': spell out compressed identifier token(s): {', '.join(compressed_words)}"
+
 
 def is_in_class(node: ast.AST) -> bool:
     """Checks if ode is inside a class
@@ -268,6 +412,7 @@ def complex_comprehension(node: ast.AST) -> str | None:
 
 # To add a style rule: write a dumb one-node function above and register it here under its kind.
 CHECKS: dict[str, Check] = {
+    "abbreviated_name": abbreviated_name,
     "named_with_underscore_and_not_in_class_or_dunder": named_with_underscore_and_not_in_class_or_dunder,
     "hidden_signature_star_args": hidden_signature_star_args,
     "dynamic_star_call": dynamic_star_call,
